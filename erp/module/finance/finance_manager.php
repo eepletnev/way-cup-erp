@@ -35,8 +35,8 @@ class FinanceManager {
 
 	function __construct($db) {
 		$this->db 	        = $db;
-		$this->salesManager = SysApplication::callManager('sales');
-		$this->exesManager  = SysApplication::callManager('exes.check');
+		$this->salesManager = SysApplication::callManager('sales', "SalesManager");
+		$this->exesManager  = SysApplication::callManager('exes.check', 'ExesCheckManager');
 	}
 
 	public function setShopID($shopID) {
@@ -169,7 +169,7 @@ class FinanceManager {
 						   '$this->shopID'
 						  );";
 
-		if ($db->query($query)) echo "Успешненько!";
+		if ($db->query($query)) echo "Успешно!";
 				   else echo "Something weird has happened!";
 	}
 
@@ -179,7 +179,7 @@ class FinanceManager {
 					WHERE `id` = '$id';";
 
 
-		if ($db->query($query)) echo "Успешненько снёс транзакцию к ебеням!";
+		if ($db->query($query)) echo "Успешнено!";
 				   else echo "Something weird has happened!";
 	}
 }

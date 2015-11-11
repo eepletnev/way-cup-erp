@@ -1,44 +1,100 @@
 <?php 
 
-class MenuItem {
-	public $id;
-	public $name;
-	public $price;
-	public $category;
-	public $amount;
-	public $unit;
+class GuestMonitor {
+	
+	function __construct() {
 
-	function __construct($db, $id) {
-		$query = "SELECT `name`, `price`, `categoryID`, `amount`, `unit` FROM `sales_menu` WHERE `id` = $id";
+	}
 
-		$stmt = $db->query($query);
+	function getAverageClientLife($db){
+		$query = "SELECT `id`, `registred` FROM `crm_client` WHERE (`name` <> '') OR (`lastname` <> '') OR (`telephone` <> '0')";
+		$everyoneslife = array();
 		if (!$stmt = $db->query($query)) {
-				echo '<h2>Ошибка поддключения к базе данных при запросе элемента меню!</h2>';
+			echo '<h2>Ошибка поддключения к базе данных!</h2>';
+			die();
+		} else {
+		    while ($row = $stmt->fetch_assoc()) {
+		    	$id = $row['id'];
+		    	$query = "SELECT `timecode` FROM `sales_check` WHERE `clientID` = $id ORDER BY `id` DESC LIMIT 1";
+				
+				if (!$nthrstmt = $db->query($query)) {
+					echo '<h2>Ошибка поддключения к базе данных!</h2>';
+					die();
+				} else {
+				    if ($lastvisit = $nthrstmt->fetch_assoc()) {
+				    	$life = date_diff(date_create($row['registred']), date_create($lastvisit['timecode']));
+				    	if ($life) {
+				    		array_push($everyoneslife, $life->days);
+				    	}
+				    }
+				}
+
+		    }
+		}
+		return array_sum($everyoneslife) / count($everyoneslife);
+	}
+
+	function getMonthlyInflow($db){
+		$result = array();
+		$query = "SELECT COUNT( MONTH(  `registred` ) ) AS  `new_clients` , MONTHNAME(  `registred` ) AS  `date` 
+				FROM  `crm_client` 
+				GROUP BY MONTH(  `registred` ) 
+				ORDER BY  `crm_client`.`registred` ASC";
+
+		if (!$stmt = $db->query($query)) {
+					echo '<h2>Ошибка поддключения к базе данных!</h2>';
+					die();
+				} else {
+				    while ($row = $stmt->fetch_assoc()) {
+				    	array_push($result, array("month" => $row['date'], "clients" => $row['new_clients']));
+				    }
+				}
+		return $result;	
+	}
+
+	function getGuestRatio($db) {
+		$result = array();
+		$registred    = 0;
+		$notregistred = 0;
+
+		for ($month = 1; $month < 13 ; $month++) { 
+			$query = "SELECT `clientID` FROM `sales_check` WHERE month(`timecode`) = " . $month;
+
+			if (!$stmt = $db->query($query)) {
+				echo "huita";
 				die();
 			} else {
-			    if ($row = $stmt->fetch_assoc()) {
-			    	$this->id 		= $id;
-			    	$this->name 	= $row['name'];
-			    	$this->price 	= $row['price'];
-			    	$this->category = $row['categoryID'];
-			    	$this->amount 	= $row['amount'];
-			    	$this->unit 	= $row['unit'];
-			    }
+				while ($row = $stmt->fetch_assoc()) {
+					if ($row['clientID'] != 0) {
+						$registred++;
+					} else {
+						$notregistred++;
+					}
+				}
 			}
+		$result[$month] = array("registred" => $registred, "not" => $notregistred);
+		}
 
-
+		return $result;		
 	}
 }
 
+
+if (!class_exists('Item')) {
+	SysApplication::callManager('menu');
+}
+
 class IncomeCheck {
-	public $id 		 	 = 0;
-	public $HRID 	 	 = 0;
-	public $HRString 	 = '';
-	public $clientID 	 = 0;
-	public $clientString = '';
-	public $shopID   	 = 0;
-	public $money 	 	 = 0.0;
-	public $timecode 	 = "2014-12-28";
+	public $id 		 	 	= 0;
+	public $HRID 	 	 	= 0;
+	public $HRString 		= '';
+	public $clientID 		= 0;
+	public $clientString 	= '';
+	public $clientTel		= 0;
+	public $shopID   	 	= 0;
+	public $money 	 	 	= 0;
+	public $timecode 	    = "2014-12-28";
+	public $listOfProducts  = array();
 
 	private $db;
 
@@ -74,13 +130,16 @@ class IncomeCheck {
 				    }
 				}
 
-				if (!$stmt = $db->query("SELECT `name`, `lastname` FROM `crm_client` WHERE `id` = $this->clientID")) {
+				if (!$stmt = $db->query("SELECT `name`, `lastname`, `telephone` FROM `crm_client` WHERE `id` = $this->clientID")) {
 					$this->clientString = "[Имя клиента]";
 				} else {
-				    if ($row = $stmt->fetch_assoc()) {
+				    if ($row = $stmt->fetch_assoc()) { 
 				    	$this->clientString = $row['name'] . ' ' . $row['lastname'];
+				    	$this->clientTel 	= $row['telephone'];
 				    }
 				}
+
+				$this->getListOfProducts();
 	}
 
 	function kEbenyam($db) {
@@ -95,33 +154,42 @@ class IncomeCheck {
 	}
 
 	function getListOfProducts() {
-		$result = array();
+		$this->listOfProducts = array();
 		$db = $this->db;
+		$result = array();
 
-		$query = "SELECT `itemID` FROM `sales_check_item` WHERE `checkID` = $this->id";
+		$query = "SELECT `itemID`, `actionID` FROM `sales_check_item` WHERE `checkID` = $this->id";
 
 				if (!$stmt = $db->query($query)) {
 					echo '<h2>Ошибка поддключения к базе данных при запросе элемента чека!</h2>';
 					die();
 				} else {
-				    while ($row = $stmt->fetch_assoc()) {
-				    	$product = new MenuItem($db, $row['itemID']);
-				    	array_push($result, $product);
+				     while ($row = $stmt->fetch_assoc()) {
+
+						array_push($result, $row['itemID']);
 				    }
+
 				}
-				if (count($result) != 0) {
-					return $result;
-				}
+					$repeats = array_count_values($result);
+					$result = array_unique($result);
+
+					foreach ($result as $productID) {
+						$item = new Item();
+						$item->queryItem($db, $productID);
+						$occurences = $repeats[$productID];
+
+						array_push($this->listOfProducts, array("occurences" => $occurences, "item" => $item));
+					}
 	}
 
-
 	function getCups() { 
-		$products = $this->getListOfProducts();
+		$this->getListOfProducts();
 		$cups = 0;
 
-		foreach ($products as $item) {
-			if ($item->unit == 'мл') {
-				$cups += 1;
+		foreach ($this->listOfProducts as $item) {
+
+			if ($item['item']->Units == 'мл') {
+				$cups += $item['occurences'];
 			}
 		}
 
@@ -152,7 +220,7 @@ class SalesManager {
 		$this->db = $db;
 	}
 
-	public function getChecks($date, $shop) {
+	public function getChecks($date, $shop, $HRID = null) {
 
 		$today     = date('Ymd', strtotime('+1 days', strtotime($date)));
 		$yesterday = date('Ymd', strtotime($date));
@@ -160,7 +228,9 @@ class SalesManager {
 
 		$db = $this->db;
 		$checks = array();
-			$query = "SELECT `id` FROM `sales_check` WHERE (`timecode` BETWEEN '". $yesterday  . "' AND '" . $today . "') AND (`shopID` = '" . $shop . "')	";
+			$query = "SELECT `id` FROM `sales_check` WHERE (`timecode` BETWEEN '". $yesterday  . "' AND '" . $today . "') AND (`shopID` = '" . $shop . "')";
+
+			if ($HRID != null) { $query .= " AND (`baristaID` = $HRID)"; }
 
 		$stmt = $db->query($query);
 			if (!$stmt = $db->query($query)) {
@@ -222,13 +292,14 @@ class SalesManager {
 		$check->kEbenyam($db);
 	}
 
-	function getBalance($date, $shop) {
+	public function getBalance($date, $shop) {
 		$income = 0;
 		$db = $this->db;
 
 		$today     = date('Ymd', strtotime('+1 days', strtotime($date)));
 		$yesterday = date('Ymd', strtotime($date));
 
+			
 			$query = "SELECT sum(`money`) FROM `sales_check` WHERE (`timecode` BETWEEN '". $yesterday  . "' AND '" . $today . "') AND (`shopID` = '" . $shop . "')	";
 
 		$stmt = $db->query($query);

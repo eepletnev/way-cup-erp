@@ -6,6 +6,7 @@
     <div class="top-client">
          <a href="?page=<?php echo $index; ?>&amp;action=edit">Добавить продукт</a>
          <strong style="margin: 0 0 0 10px;">|</strong>
+         <a href="?page=<?php echo $index; ?>&amp;action=records">Перемещения</a>
     </div>
 
             <table>

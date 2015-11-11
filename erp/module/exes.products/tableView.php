@@ -16,6 +16,7 @@
                <td>Цена</td>
                <td>Категория</td>
                <td>В закупке</td>
+               <td>Учёт</td>
              </thead>
              <tbody>
               <?php foreach ($products as $product) { ?>
@@ -25,6 +26,7 @@
                     <td><?php echo $product->Price; ?></td>
                     <td><?php echo $product->getCategoryName(); ?></td>
                     <td><?php echo $product->OnView; ?></td>
+                    <td><?php echo $product->Storable; ?></td>
                   </tr>
               <?php } ?>
              </tbody>

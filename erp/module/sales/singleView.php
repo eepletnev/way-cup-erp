@@ -14,7 +14,7 @@
 <h4>Заказ:</h4>
 	<ul>
 		<?php foreach ($products as $product) { ?>
-			<li><?php echo $product->name . ' ' . $product->amount . '...........' . $product->price . 'руб.'; ?></li>
+			<li><?php echo $product->Name . ' ' . $product->Amount . '...........' . $product->Price . 'руб.'; ?></li>
 		<?php } ?>
 	</ul>
 <h5>Итого: <?php echo $check->money; ?> рублей</h5>

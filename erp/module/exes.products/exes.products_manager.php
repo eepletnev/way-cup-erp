@@ -1,7 +1,7 @@
 <?php
 
 /**
-*Product Category class
+* Product Category class
 */
 
 class ProductCategory{
@@ -67,11 +67,12 @@ class ProductCategory{
 /**
 *Product class
 */
-class Product{
+class Product {
 	public $ID   		= 0;
 	public $Price       = 0;
     public $CategoryID 	= 0;
     public $OnView 		= 0;
+    public $Storable    = 0;
     public $Name   		= '';
     public $Amount   	= 0;
     public $Unit   		= '';
@@ -86,7 +87,7 @@ class Product{
 		return $this->productCategory->getName();
 	}
 	public function queryProduct($db, $id) {
-		$query  = "SELECT `id`, `name`, `price`, `categoryID`, `onView`, `amount`, `unit` FROM $this->TABLE_NAME WHERE `id` = '$id'";
+		$query  = "SELECT `id`, `name`, `price`, `categoryID`, `onView`, `storable`, `amount`, `unit` FROM $this->TABLE_NAME WHERE `id` = '$id'";
 					if (!$stmt = $db->query($query)) {
 						echo '<h2>Ошибка подключения к базе данных при запросе Элементов!</h2>';
 						die();
@@ -96,6 +97,7 @@ class Product{
 								$this->Name   		= $row['name'];
 								$this->Price   		= $row['price'];
 								$this->OnView 		= $row['onView'];
+								$this->Storable 	= $row['storable'];
 								$this->CategoryID 	= $row['categoryID'];
 								$this->Amount 		= $row['amount'];
 								$this->Unit 		= $row['unit'];
@@ -108,6 +110,7 @@ class Product{
 		$query  = "INSERT INTO $this->TABLE_NAME (`name`,
 										   		  `price`,
 										   		  `onView`,
+										   		  `storable`,
 										   		  `categoryID`,
 										   		  `amount`,
 										   		  `unit`
@@ -115,6 +118,7 @@ class Product{
 					VALUES  	  ('$this->Name',
 								   '$this->Price',
 								   '$this->OnView',
+								   '$this->Storable',
 								   '$this->CategoryID',
 								   '$this->Amount',
 								   '$this->Unit'
@@ -130,6 +134,7 @@ class Product{
 		$query = "UPDATE $this->TABLE_NAME SET   `name` 		    = '$this->Name',
 										  		 `price` 		    = '$this->Price',
 										  		 `onView`			= '$this->OnView',
+										  		 `storable`			= '$this->Storable',
 										  		 `categoryID` 		= '$this->CategoryID',
 										  		 `amount`			= '$this->Amount',
 										  		 `unit`				= '$this->Unit'
@@ -139,8 +144,8 @@ class Product{
 						   else echo "Something weird has happened with update product.";
 	}
 	public function delete($db, $id){
-
-		$query = "UPDATE $this->TABLE_NAME SET `onView`			= false
+		// РЕАЛИЗОВАТЬ!
+		$query = "UPDATE $this->TABLE_NAME SET `onView`			= 0
 										WHERE 	 `id` 			= '$this->ID';";
 		return $db->query($query);
 	}
@@ -163,7 +168,7 @@ class ProductManager {
 		$db = $this->db;
 		$products = array();
 
-			if (!$stmt = $db->query("SELECT `id` FROM $this->TABLE_NAME_PRODUCT ORDER BY -onView, categoryID DESC")) {
+			if (!$stmt = $db->query("SELECT `id` FROM $this->TABLE_NAME_PRODUCT WHERE `deleted` = 0 ORDER BY -onView, categoryID DESC")) {
 				echo '<h2>Ошибка поддключения к базе данных!</h2>';
 				die();
 			} else {
@@ -206,13 +211,14 @@ class ProductManager {
 		$category->queryCategory($db, $id);
 		return $category;
 	}
-	public function saveProduct($id, $price, $name, $categoryID, $onView, $amount, $unit) {
+	public function saveProduct($id, $price, $name, $categoryID, $onView, $storable, $amount, $unit) {
 		$db = $this->db;
 	
 		$newProduct = new Product();
            $newProduct->Name        = $name;
            $newProduct->Price 		= $price;
            $newProduct->OnView 	 	= $onView;
+           $newProduct->Storable 	= $storable;
            $newProduct->CategoryID  = $categoryID;
            $newProduct->Amount 		= $amount;
            $newProduct->Unit 		= $unit;

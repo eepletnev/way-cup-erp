@@ -18,6 +18,10 @@
   // Generaly, the shit below is the only shit that should be here:
        
         $inventoryManager = SysApplication::callManager($self->id);
+        
+        global $waycup;
+        $shop = $waycup->getCurrentShop();
+
 
         if (!isset($_GET['action'])) {
           $action = 'list';
@@ -30,6 +34,11 @@
             case 'edit':
                 $resource = new Resource();
                 $resource = $inventoryManager->getResourceByID($_POST['ResourceID']);
+                $product  = $resource->product;
+                $product->Amount = $_POST['minusQuantity'];
+                $inventoryManager->saveRecord(array($product), $shop, $_SESSION['userID'], 2);
+                $inventoryManager->writeOff(array($product), $shop);
+                echo "Done!";
               break;
             
             default:
@@ -58,10 +67,21 @@
                 include('module/' . $self->id . '/editView.php');
           break;
 
-          default:
-                global $waycup;
-                $shop = $waycup->getCurrentShop();
+          case 'records':
+                $records = $inventoryManager->getInventoryHistory($shop);
+                include('module/' . $self->id . '/historyView.php');
+          break;
 
+          case 'singleRecord': 
+            if (isset($_GET['id'])) {
+              $record = $inventoryManager->getRecordByID($_GET['id']);         
+            } else {
+              $record = new Record();
+            }
+              include('module/' . $self->id . '/singleRecordView.php');
+          break;
+
+          default:
                 $resources = $inventoryManager->getInventoryList($shop);
                 include('module/' . $self->id . '/tableView.php');
 

@@ -13,6 +13,7 @@
 		         <thead>
 		         	<tr>
 		         		<td>Бариста</td>
+		         		<td>Продукты</td>
 		         		<td>Сумма</td>
 		         		<td>Время транзакции</td>
 		         	</tr>
@@ -21,6 +22,13 @@
 					<?php foreach ($checks as $check) { ?>
 							 <tr onclick="window.open('?page=<?php echo $index; ?>&amp;action=single&amp;id=<?php echo $check->id; ?>','_self')">
 			                    <td><?php echo $check->HRString; ?></td>
+			                    <td>
+			                    <?php
+			                    	foreach ($check->listOfProducts as $item) {
+			                    		 echo $item['item']->Name . ' x' . $item['occurences'] . '<br>';
+			                    	}	
+			                    ?>
+			                    </td>
 			                    <td><?php echo $check->money; ?> руб.</td>
 			                    <td><?php echo $check->getTime(); ?></td>
 			                  </tr>

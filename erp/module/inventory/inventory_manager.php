@@ -3,6 +3,83 @@
 *  Inventory module manager
 */
 require_once 'Resource.php';
+
+class Record {
+	public $id 		 	   = 0;
+	public $HRID 	 	   = 0;
+	public $HRString 	   = '';
+	public $kindID 		   = 1;
+	public $kind 		   = 'Списание';
+	public $shopID   	   = 0;
+	public $timecode 	   = "2014-12-28";
+	public $listOfResources = array();
+
+	function __construct() {
+		
+	}
+
+	public function queryRecord($db, $id) {
+		$query  = "SELECT `id`, `HRID`, `shopID`, `kindID`, `timecode`  FROM `inventory_history` WHERE `id` = '$id'";
+		if (!$stmt = $db->query($query)) {
+			echo '<h2>Ошибка подключения к базе данных!</h2>';
+			die();
+		} else {
+			if ($row = $stmt->fetch_assoc()) {
+				$this->id 			= $row['id'];
+				$this->HRID 		= $row['HRID'];
+				$this->shopID 		= $row['shopID'];
+				$this->timecode 	= $row['timecode'];
+				$this->kindID 		= $row['kindID'];
+				$this->kind 		= (1 == $row['kindID']) ? 'Пополнение' : ((2 == $row['kindID']) ? 'Списание' : 'День');
+			}
+ 		}
+
+		$this->listOfResources = $this->getListOfResources($db);
+
+		if (!$stmt = $db->query("SELECT `name` FROM `hr_employee` WHERE `id` = $this->HRID")) {
+			$this->HRString = "[Имя бариста]";
+		} else {
+		    if ($row = $stmt->fetch_assoc()) {
+		    	$this->HRString = $row['name'];
+		    }
+		}
+
+
+	}
+
+	protected function getListOfResources($db) {
+		$result = array();
+
+		$query = "SELECT `resourceID` FROM `inventory_history_resource` WHERE `historyID` = $this->id";
+
+				if (!$stmt = $db->query($query)) {
+					echo '<h2>Ошибка поддключения к базе данных при запросе элемента чека!</h2>';
+					die();
+				} else {
+				    while ($row = $stmt->fetch_assoc()) {
+				    	$resource = new Resource();
+				    	$resource->queryResource($db, $row['resourceID']);
+				    	array_push($result, $resource);
+				    }
+				}
+				if (count($result) != 0) {
+					return $result;
+				}
+	}
+
+	public function save($db) {
+		$query = "INSERT INTO `inventory_history` (`HRID`, `shopID`, `kindID`) VALUES ($this->HRID, $this->shopID, $this->kindID)";
+		$db->query($query);
+		$id = $db->insert_id;
+
+		foreach ($this->listOfResources as $res) {
+			$query = "INSERT INTO `inventory_history_resource` (`historyID`, `resourceID`, `quantity`) VALUES ($id, $res->ID, $res->Amount)";
+			$db->query($query);
+		}
+	}
+
+}
+
 class InventoryManager {
 	protected $db;
 	protected $TABLE_NAME_RESOURCE 				= 'inventory_resource';
@@ -28,6 +105,31 @@ class InventoryManager {
 		    }
 		}
 		return $resources;
+	}
+
+	public function getInventoryHistory($shopID, $date = null) {
+		$db = $this->db;
+
+		$records = array();
+		$query = "SELECT `id` FROM `inventory_history` WHERE `shopID` = $shopID ORDER BY id DESC";
+		if (!$stmt = $db->query($query)) {
+			echo '<h2>Ошибка подключения к базе данных!</h2>';
+			die();
+		} else { 
+			while ($row = $stmt->fetch_assoc()) {
+				$record = new Record();
+				$record->queryRecord($db, $row['id']);
+				array_push($records, $record);
+			}
+		}
+		return $records;
+	}
+
+	public function getRecordByID($id) {
+		$db = $this->db;
+		$record = new Record();
+		$record->queryRecord($db, $id);
+		return $record;
 	}
 
 	public function getResourceByID($id) {
@@ -110,6 +212,24 @@ class InventoryManager {
 			}
 		}
 	}
+
+	public function saveRecord($listOfResources, $shop, $HRID, $kindID) {
+		$db = $this->db;
+		$record = new Record();
+		$record->listOfResources = $listOfResources;
+		$record->shopID			= $shop;
+		$record->HRID 			= $HRID;
+		$record->kindID 		= $kindID;
+
+		$record->save($db);
+	}
+
+	public function saveShiftProducts($date, $shop, $HRID) {
+		$salesMan = SysApplication::callManager('sales', 'SalesManager');
+		$products = $salesMan->getListOfShiftProducts($date, $shop, $HRID);
+		$this->saveRecord($products, $shop, $HRID, 3);
+		$this->writeOff($products, $shop);
+	} 
 }
 	global $mysqli;
 	$manager = new InventoryManager($mysqli);

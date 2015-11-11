@@ -52,6 +52,13 @@
 
                 case 'close':
                     $close = new Transaction(0, 5, '', $_POST['comment'], $_POST['summ'], '');
+                    $stockMan = SysApplication::callManager('inventory', 'InventoryManager');
+
+                    $date = date('Y-m-d');
+                    $shop = $shopID;
+                    $HRID = $_SESSION['userID'];
+
+                    $stockMan->saveShiftProducts($date, $shop, $HRID);
                     $financeManager->save($close);
                   break;
 

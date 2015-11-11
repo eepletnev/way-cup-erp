@@ -30,12 +30,15 @@
         }
 
         if (isset($_POST['ProductID'])) {
-          $handleCheckbox = (isset($_POST['OnView'])) ? 1 : 0;
+          $handleViewCheckbox   = (isset($_POST['OnView'])) ? 1 : 0;
+          $handleStoreCheckbox = (isset($_POST['ToStore'])) ? 1 : 0; 
+
             $exesProductManager->saveProduct($_POST['ProductID'],
                                   $_POST['Price'],
                                   $_POST['Name'],
                                   $_POST['ProductCategoryID'],
-                                  $handleCheckbox,
+                                  $handleViewCheckbox,
+                                  $handleStoreCheckbox,
                                   $_POST['Amount'],
                                   $_POST['Unit']
                                   );

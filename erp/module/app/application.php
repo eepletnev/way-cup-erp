@@ -156,15 +156,21 @@ static public $currentSession = false;
 		SysApplication::showCurrentPage();
 	}
 
-	public static function callManager($module) {
+	public static function callManager($module, $directCall = null) {
 		$path = 'module/' . $module . '/' . $module . '_manager.php';
 		
 		if (file_exists($path)) {
 			include_once($path);
 			if (isset($manager)) {
 				return $manager;	
-			} else { 
-				die("<h2>Conflict occured!</h2> Couldnt call $module manager!");
+			} else {
+				if ($directCall != null) {
+					global $mysqli;
+					$manager = new $directCall($mysqli);
+					return $manager;
+				} else {
+					die("<h2>Conflict occured!</h2> Couldnt call $module manager!");
+				}
 			}
 			
 		} else { 

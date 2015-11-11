@@ -1,4 +1,7 @@
 <?php
+if (!class_exists('Product')) {
+	SysApplication::callManager('exes.check');
+}
 
 /**
 *Item Category class
@@ -141,7 +144,6 @@ class Item
 		if ($db->query($query)) echo "Saved!";
 						   else echo "Something weird has happened.";
 	}
-
 }
 
 

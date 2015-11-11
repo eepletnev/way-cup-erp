@@ -39,5 +39,9 @@
  	<br> 
  	<input type="checkbox" name="OnView" value="1" <?php if (1 == $product->OnView) echo 'checked'; ?>>
  </h4>
+  <h4>Вести учёт на складе:
+ 	<br> 
+ 	<input type="checkbox" name="ToStore" value="1" <?php if (1 == $product->Storable) echo 'checked'; ?>>
+ </h4>
 
 </form>

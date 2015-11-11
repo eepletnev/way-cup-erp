@@ -104,7 +104,7 @@ class Item
 		return $this->itemCategory->getName();
 	}
 	public function queryItem($db, $id) {
-		$query  = "SELECT `id`, `name`, `price`, `categoryID`, `unit` , `amount`, `onView` FROM $this->TABLE_NAME WHERE `id` = '$id' AND `onView` = 1";
+		$query  = "SELECT `id`, `name`, `price`, `categoryID`, `unit` , `amount`, `onView` FROM $this->TABLE_NAME WHERE `id` = '$id'";
 					if (!$stmt = $db->query($query)) {
 						echo '<h2>Ошибка подключения к базе данных при запросе Элементов!</h2>';
 						die();

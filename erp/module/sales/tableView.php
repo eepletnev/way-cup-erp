@@ -12,25 +12,34 @@
 	         <table id='summary-table'>
 		         <thead>
 		         	<tr>
+		         		
 		         		<td>Клиент</td>
+		         		<td>Продукты</td>
 		         		<td>Сумма</td>
-		         		<td>Стаканы</td>
 		         		<td>Время транзакции</td>
+		         		<td>Бариста</td>
 		         	</tr>
 		         </thead>
 		         <tbody>
 					<?php foreach ($checks as $check) { ?>
 							 <tr onclick="window.open('?page=<?php echo $index; ?>&amp;action=single&amp;id=<?php echo $check->id; ?>','_self')">
-			                    <td><?php echo $check->clientString; ?></td>
-			                    <td><?php echo $check->money; ?></td>
 			                    <td>
-			                    	<?php
-			                    		for ($cup=0; $cup < $check->getCups(); $cup++) { 
-			                    			echo "<i style='background-size: 9px 18px; width: 9px; height: 18px;'></i>";
-			                    		}
-			                    	?>
+			                    <?php if ($check->clientID != 0) {
+			                    	echo $check->clientString; 
+			                    	echo "<br>";
+			                    	echo substr($check->clientTel, 7);
+			                    } ?>
 			                    </td>
+			                     <td>
+			                    <?php
+			                    	foreach ($check->listOfProducts as $item) {
+			                    		echo $item['item']->Name . ' x' . $item['occurences'] . '<br>';
+			                    	}	
+			                    ?>
+			                    </td>
+			                    <td><?php echo $check->money; ?> руб.</td>
 			                    <td><?php echo $check->getTime(); ?></td>
+			                    <td><?php echo $check->HRString?></td>
 			                  </tr>
 					<?php  }?>
 				</tbody>

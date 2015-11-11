@@ -67,6 +67,11 @@
                 include('module/' . $self->id . '/editView.php');
           break;
 
+          case 'guestMonitor':
+                $monitor = new GuestMonitor();
+                include('module/' . $self->id . '/guestMonitorView.php');
+          break;
+
           default:
             global $waycup;
       

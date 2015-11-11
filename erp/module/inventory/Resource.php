@@ -108,6 +108,6 @@ class Resource{
 	private $categoryID = 0;
 	private $shopID 	= 0;
    	private $resourceCategory;
-   	private $product;
+   	public $product;
     private $TABLE_NAME = 'inventory_resource';
 }

@@ -55,8 +55,8 @@ class WCCManager {
 			if (!$stmt = $mysqli->query($query)) {
 				return false;
 			} else { 
-				$name = $stmt->fetch_row();
-				return $name[0];
+				$res = $stmt->fetch_row();
+				return $res[0];
 			}
 	}
 

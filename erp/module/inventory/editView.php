@@ -2,7 +2,7 @@
  <div class="top-client">
 	 <a href="javascript:history.back()">Назад</a>
 	 <strong style="margin: 0 0 0 10px;">|</strong>
-	 <a onclick="document.getElementById('saveForm').submit();">Сохранить</a>
+	 <a onclick="document.getElementById('saveForm').submit();">Списать</a>
  </div>
 	<div style="display: inline-block; width: 100%;">
 	 <h3 style="float: right"><?php if ($resource->getID() == 0) echo 'новый'; else echo $resource->getID(); ?></h3>
@@ -16,18 +16,14 @@
 			<?php echo $resource->getProductName(); ?>
 		<br>
 	</h3>
-	<h3>
-		Номер категории ресурса:
-		<br>
-		<input type="number" name="ResourceCategoryID" value="<?php echo $resource->getCategoryID(); ?>">
-		<br>
-		<input type="hidden" name="action" value="edit">
-		Название категории:
-		<?php echo $resource->getCategoryName(); ?>
-	</h3>
 	
  <br>
- <h4>Количество: 	 
- <br><input type="number" name="ResourceQuantity" value="<?php echo $resource->getQuantity(); ?>"></h4>
+ <h4>Количество:
  <br>
+ <?php echo $resource->getQuantity() . $resource->product->Unit; ?>
+ <br><br>
+ Списать: 	 
+ <br><input type="number" name="minusQuantity" value=""><?php echo $resource->product->Unit; ?></h4>
+ <br>
+ <input type="hidden" name="action" value="edit">
 </form>

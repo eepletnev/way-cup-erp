@@ -17,7 +17,7 @@
   
   // 'cause this shit is the same for all the managers using modules.
 
-      $index = SYSApplication::getPageIndexByName($self->name);
+      $index = SysApplication::getPageIndexByName($self->name);
 
   // Generaly, the shit below is the only shit that should be here:
        
