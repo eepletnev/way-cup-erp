@@ -28,6 +28,8 @@
 
       $salesManager = SysApplication::callManager($self->id);
 
+      global $waycup;
+
         if (!isset($_GET['action'])) {
           $action = 'list';
         } else {
@@ -72,10 +74,16 @@
                 include('module/' . $self->id . '/guestMonitorView.php');
           break;
 
-          default:
-            global $waycup;
-      
+          case 'products':
+            $date = date("Y-m-d");
+            $shop = $waycup->getCurrentShop();
+           
+              if (isset($_GET['date']))  $date = $_GET['date'];
+               
+                include('module/' . $self->id . '/productsView.php');
 
+          break;
+          default:
             $date = date("Y-m-d");
 		      	$shop = $waycup->getCurrentShop();
 

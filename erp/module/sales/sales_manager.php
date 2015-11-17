@@ -34,6 +34,33 @@ class GuestMonitor {
 		return array_sum($everyoneslife) / count($everyoneslife);
 	}
 
+	function getLoyalityStat($db, $clientid) {
+    	$query = "SELECT count(`id`) AS `visits` FROM `sales_check` WHERE `clientID` = $clientid";
+		
+		if (!$nthrstmt = $db->query($query)) {
+			echo '<h2>Ошибка поддключения к базе данных!</h2>';
+			die();
+		} else {
+		    if ($visits = $nthrstmt->fetch_assoc()) {
+		    	if (0 == $visits['visits']) {
+		    		return 'none';
+		    	}
+		    	if (3 >= $visits['visits']) {
+		    		return 'low';
+		    	}
+		    	if (15 > $visits['visits']) {
+		    		return 'huge';
+		    	}
+		    	if (3 < $visits['visits']) {
+		    		return 'average';
+		    	}
+
+		    }
+		}
+	}
+
+
+
 	function getMonthlyInflow($db){
 		$result = array();
 		$query = "SELECT COUNT( MONTH(  `registred` ) ) AS  `new_clients` , MONTHNAME(  `registred` ) AS  `date` 
@@ -49,6 +76,7 @@ class GuestMonitor {
 				    	array_push($result, array("month" => $row['date'], "clients" => $row['new_clients']));
 				    }
 				}
+
 		return $result;	
 	}
 
@@ -56,6 +84,10 @@ class GuestMonitor {
 		$result = array();
 		$registred    = 0;
 		$notregistred = 0;
+		$loyalityLevel['low'] 		  = 0;
+		$loyalityLevel['average'] 	  = 0;
+		$loyalityLevel['huge'] 		  = 0;
+		$loyalityLevel['none'] 		  = 0;
 
 		for ($month = 1; $month < 13 ; $month++) { 
 			$query = "SELECT `clientID` FROM `sales_check` WHERE month(`timecode`) = " . $month;
@@ -67,12 +99,13 @@ class GuestMonitor {
 				while ($row = $stmt->fetch_assoc()) {
 					if ($row['clientID'] != 0) {
 						$registred++;
+						$loyalityLevel[$this->getLoyalityStat($db, $row['clientID'])]++;
 					} else {
 						$notregistred++;
 					}
 				}
 			}
-		$result[$month] = array("registred" => $registred, "not" => $notregistred);
+		$result[$month] = array("registred" => $registred, "not" => $notregistred, 'loyalityLevel' => $loyalityLevel);
 		}
 
 		return $result;		
@@ -157,6 +190,7 @@ class IncomeCheck {
 		$this->listOfProducts = array();
 		$db = $this->db;
 		$result = array();
+		$free = array();
 
 		$query = "SELECT `itemID`, `actionID` FROM `sales_check_item` WHERE `checkID` = $this->id";
 
@@ -165,8 +199,11 @@ class IncomeCheck {
 					die();
 				} else {
 				     while ($row = $stmt->fetch_assoc()) {
-
-						array_push($result, $row['itemID']);
+				     	if (1 == $row['actionID']) {
+					     	array_push($free, $row['itemID']);
+				     	} else {
+							array_push($result, $row['itemID']);
+				    	}
 				    }
 
 				}
@@ -176,6 +213,19 @@ class IncomeCheck {
 					foreach ($result as $productID) {
 						$item = new Item();
 						$item->queryItem($db, $productID);
+						$occurences = $repeats[$productID];
+						array_push($this->listOfProducts, array("occurences" => $occurences, "item" => $item));
+					}
+
+					$repeats = array_count_values($free);
+					$result = array_unique($free);
+
+					foreach ($result as $productID) {
+						$item = new Item();
+						$item->queryItem($db, $productID);
+						$item->Name  = 'Беспл. ' . $item->Name;
+						$item->Price = 0;	 
+
 						$occurences = $repeats[$productID];
 
 						array_push($this->listOfProducts, array("occurences" => $occurences, "item" => $item));
@@ -299,7 +349,7 @@ class SalesManager {
 		$today     = date('Ymd', strtotime('+1 days', strtotime($date)));
 		$yesterday = date('Ymd', strtotime($date));
 
-			
+
 			$query = "SELECT sum(`money`) FROM `sales_check` WHERE (`timecode` BETWEEN '". $yesterday  . "' AND '" . $today . "') AND (`shopID` = '" . $shop . "')	";
 
 		$stmt = $db->query($query);

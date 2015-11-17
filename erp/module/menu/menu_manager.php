@@ -287,6 +287,7 @@ class MenuManager {
 		$deleted->delete($db, $id);
 	}
 
+
 	public function getRecepieFor($item) {
 		$db = $this->db;
 		return $item->queryRecepie($db);

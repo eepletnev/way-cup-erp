@@ -1,6 +1,7 @@
 
 	<h3 class="main-title">Продажи</h3>
 	<div class="date-picker">
+		 <a href="?page=<?php echo $index; ?>&action=products&date=<?php echo date('Y-m-d');?>">По продуктам</a>
 		 <a href="?page=<?php echo $index; ?>&date=<?php echo date('Y-m-d', strtotime('-1 days', strtotime($date)));?>">< Туда</a>
 		 <label><input type="date" onchange="window.location.replace('?page=<?php echo $index; ?>&date=' + this.value);" name="date" value="<?php echo date('Y-m-d', strtotime($date));?>"></label>
          <a href="?page=<?php echo $index; ?>&date=<?php echo date('Y-m-d', strtotime('+1 days', strtotime($date)));?>">Сюда ></a>
@@ -33,7 +34,7 @@
 			                     <td>
 			                    <?php
 			                    	foreach ($check->listOfProducts as $item) {
-			                    		echo $item['item']->Name . ' x' . $item['occurences'] . '<br>';
+			                    		echo $item['item']->Name . ' ' . $item['item']->Amount . $item['item']->Units . ' x' . $item['occurences'] . '<br>';
 			                    	}	
 			                    ?>
 			                    </td>
@@ -44,6 +45,7 @@
 					<?php  }?>
 				</tbody>
 			</table>
+
 		<h5>Всего за этот день:</h5>
 		<table>
 			<thead>
