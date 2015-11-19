@@ -77,9 +77,18 @@
           case 'products':
             $date = date("Y-m-d");
             $shop = $waycup->getCurrentShop();
-           
+            $listOfProducts = array();
+
+            $checks = $salesManager->getChecks($date, $shop);
+            foreach ($checks as $check) {
+              $check->getListOfProducts();
+              $listOfProducts = array_merge($listOfProducts, $check->listOfProducts);
+            }
+
+            $check = new IncomeCheck();
+            $check->listOfProducts = $listOfProducts;
+
               if (isset($_GET['date']))  $date = $_GET['date'];
-               
                 include('module/' . $self->id . '/productsView.php');
 
           break;

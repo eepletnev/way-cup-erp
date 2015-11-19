@@ -33,8 +33,8 @@
 			                    </td>
 			                     <td>
 			                    <?php
-			                    	foreach ($check->listOfProducts as $item) {
-			                    		echo $item['item']->Name . ' ' . $item['item']->Amount . $item['item']->Units . ' x' . $item['occurences'] . '<br>';
+			                    	foreach ($check->getGroupedList() as $item) {
+			                    		echo $item['item']->ActionString . ' ' . $item['item']->Name . ' ' . $item['item']->Amount . $item['item']->Units . ' x' . $item['occurences'] . '<br>';
 			                    	}	
 			                    ?>
 			                    </td>

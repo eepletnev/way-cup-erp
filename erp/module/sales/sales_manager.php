@@ -186,50 +186,59 @@ class IncomeCheck {
 		return substr($this->timecode, 10, strlen($this->timecode));
 	}
 
-	function getListOfProducts() {
+	function getListOfProducts() { 
 		$this->listOfProducts = array();
 		$db = $this->db;
-		$result = array();
-		$free = array();
-
+		
 		$query = "SELECT `itemID`, `actionID` FROM `sales_check_item` WHERE `checkID` = $this->id";
 
-				if (!$stmt = $db->query($query)) {
-					echo '<h2>Ошибка поддключения к базе данных при запросе элемента чека!</h2>';
-					die();
-				} else {
-				     while ($row = $stmt->fetch_assoc()) {
-				     	if (1 == $row['actionID']) {
-					     	array_push($free, $row['itemID']);
-				     	} else {
-							array_push($result, $row['itemID']);
-				    	}
-				    }
+			if (!$stmt = $db->query($query)) {
+				echo '<h2>Ошибка поддключения к базе данных при запросе элемента чека!</h2>';
+				die();
+			} else {
+			     while ($row = $stmt->fetch_assoc()) {
+				    $item = new Item();
+					$item->queryItem($db, $row['itemID']);
+					$item->applyAction($db, $row['actionID']);
+					array_push($this->listOfProducts, $item);
+			    }
 
+			}
+	}
+
+	function productExists($productID, $targetArray){
+			for ($i=0; $i < count($targetArray); $i++) { 
+				if ($targetArray[$i]['item']->ID == $productID) {
+					return $i;
 				}
-					$repeats = array_count_values($result);
-					$result = array_unique($result);
+			}
+			return false;
+	}
 
-					foreach ($result as $productID) {
-						$item = new Item();
-						$item->queryItem($db, $productID);
-						$occurences = $repeats[$productID];
-						array_push($this->listOfProducts, array("occurences" => $occurences, "item" => $item));
-					}
+	function getGroupedList() {
+		if (count($this->listOfProducts) == 0) {
+			$this->getListOfProducts();
+		} 
+		$products = $this->listOfProducts;
+		$groupedList = array();
 
-					$repeats = array_count_values($free);
-					$result = array_unique($free);
+		foreach ($products as $product) {
+			if (0 != $product->ActionID) {
+				$product->ID = 1000 + $product->ID;
+			}
+		}
 
-					foreach ($result as $productID) {
-						$item = new Item();
-						$item->queryItem($db, $productID);
-						$item->Name  = 'Беспл. ' . $item->Name;
-						$item->Price = 0;	 
+		foreach ($products as $product) {
+			$index = $this->productExists($product->ID, $groupedList);
+			if (false === $index) {
+				array_push($groupedList, array("occurences" => 1, "item" => $product));
+			} else {
+				$groupedList[$index]['occurences']++;
+			}
+		}
 
-						$occurences = $repeats[$productID];
+		return $groupedList;
 
-						array_push($this->listOfProducts, array("occurences" => $occurences, "item" => $item));
-					}
 	}
 
 	function getCups() { 
@@ -238,8 +247,8 @@ class IncomeCheck {
 
 		foreach ($this->listOfProducts as $item) {
 
-			if ($item['item']->Units == 'мл') {
-				$cups += $item['occurences'];
+			if ($item->Units == 'мл') {
+				$cups++;
 			}
 		}
 

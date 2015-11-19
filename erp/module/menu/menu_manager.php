@@ -85,14 +85,16 @@ class ItemCategory{
 
 class Item
 {
-	public $ID   		= 0;
-	public $Price       = 0;
-    public $CategoryID 	= 0;
-    public $Amount		= 0;
-    public $OnView		= false;
-    public $Name   		= '';
-    public $Units 		= '';
-    public $Recepie 	= array();
+	public $ID   		 = 0;
+	public $Price        = 0;
+    public $CategoryID 	 = 0;
+    public $Amount		 = 0;
+    public $OnView		 = false;
+    public $ActionID	 = 0;
+    public $ActionString = '';
+    public $Name   		 = '';
+    public $Units 		 = '';
+    public $Recepie 	 = array();
 
    private $itemCategory;
 
@@ -135,6 +137,23 @@ class Item
 					$product->Amount = $row['amount'];
 					
 					array_push($this->Recepie, $product);
+				}
+				return true;
+			}
+	}
+
+	public function applyAction($db, $actionID) {
+		$query  = "SELECT `name`, `kind`, `power` FROM `sales_menu_action` WHERE `id` = $actionID";
+			if (!$stmt = $db->query($query)) {
+				echo "<h2>Ошибка при попытке запроса акции.</h2>";
+				return false;
+			} else {
+				if ($row = $stmt->fetch_assoc()) {
+					$this->ActionID = $actionID;
+					$this->ActionString = $row['name'];
+					if ('%' == $row['kind']) {
+						$this->Price = $this->Price - $this->Price * 0.01 * $row['power'];
+					}
 				}
 				return true;
 			}
